@@ -2,7 +2,10 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Agent } from '@mastra/core/agent';
 import { createSupportAgent } from './support-agent';
-import { ConversationService, Channel } from '../conversation/conversation.service';
+import {
+  ConversationService,
+  Channel,
+} from '../conversation/conversation.service';
 import { CustomersService } from '../customers/customers.service';
 import { UptimeService } from '../integrations/uptime/uptime.service';
 import { HoursService } from '../hours/hours.service';
@@ -13,7 +16,7 @@ import { PlaneService } from '../integrations/plane/plane.service';
 @Injectable()
 export class AgentService implements OnModuleInit {
   private readonly logger = new Logger(AgentService.name);
-  private agent: Agent;
+  private agent!: Agent;
 
   constructor(
     private readonly config: ConfigService,
@@ -62,7 +65,7 @@ export class AgentService implements OnModuleInit {
 
     // Construir mensajes en formato Mastra
     const messages = history.map((m) => ({
-      role: m.role as 'user' | 'assistant',
+      role: m.role,
       content: m.content,
     }));
 
@@ -72,18 +75,25 @@ export class AgentService implements OnModuleInit {
 
       // Reemplazar el último mensaje user con el enriquecido
       if (messages.length > 0) {
-        messages[messages.length - 1] = { role: 'user', content: enrichedMessage };
+        messages[messages.length - 1] = {
+          role: 'user',
+          content: enrichedMessage,
+        };
       }
 
-      const response = await this.agent.generate(messages as never);
-      const agentReply = response.text ?? 'Lo siento, no pude procesar tu mensaje en este momento.';
+      const response = await this.agent.generate(messages);
+      const agentReply =
+        response.text ??
+        'Lo siento, no pude procesar tu mensaje en este momento.';
 
       // Guardar respuesta del agente
       this.conversationService.appendMessage(threadId, 'assistant', agentReply);
 
       return agentReply;
     } catch (error: unknown) {
-      this.logger.error(`Error al procesar mensaje para ${threadId}: ${(error as Error).message}`);
+      this.logger.error(
+        `Error al procesar mensaje para ${threadId}: ${(error as Error).message}`,
+      );
       return 'Ocurrió un error al procesar tu solicitud. Por favor, intentá de nuevo en unos minutos.';
     }
   }
