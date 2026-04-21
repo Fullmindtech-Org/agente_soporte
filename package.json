@@ -18,15 +18,7 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "db:migrate": "prisma migrate dev",
-    "db:migrate:deploy": "prisma migrate deploy",
-    "db:seed": "ts-node prisma/seed.ts",
-    "db:studio": "prisma studio",
-    "prisma:generate": "prisma generate",
     "plane:explore": "ts-node scripts/explore-plane.ts"
-  },
-  "prisma": {
-    "seed": "ts-node prisma/seed.ts"
   },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.53",
@@ -38,13 +30,9 @@
     "@nestjs/core": "^11.0.1",
     "@nestjs/platform-express": "^11.0.1",
     "@openrouter/ai-sdk-provider": "^2.6.0",
-    "@prisma/adapter-pg": "^7.7.0",
-    "@prisma/client": "^7.7.0",
     "axios": "^1.15.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
-    "pg": "^8.20.0",
-    "prisma": "^7.7.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1"
   },
@@ -57,7 +45,6 @@
     "@types/express": "^5.0.0",
     "@types/jest": "^30.0.0",
     "@types/node": "^24.12.2",
-    "@types/pg": "^8.20.0",
     "@types/supertest": "^7.0.0",
     "dotenv": "^17.4.2",
     "eslint": "^9.18.0",
