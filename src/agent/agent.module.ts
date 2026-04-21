@@ -1,0 +1,24 @@
+import { Module } from '@nestjs/common';
+import { AgentService } from './agent.service';
+import { CustomersModule } from '../customers/customers.module';
+import { HoursModule } from '../hours/hours.module';
+import { TicketsModule } from '../tickets/tickets.module';
+import { FaqModule } from '../faq/faq.module';
+import { ConversationModule } from '../conversation/conversation.module';
+import { UptimeModule } from '../integrations/uptime/uptime.module';
+import { PlaneModule } from '../integrations/plane/plane.module';
+
+@Module({
+  imports: [
+    CustomersModule,
+    HoursModule,
+    TicketsModule,
+    FaqModule,
+    ConversationModule,
+    UptimeModule,
+    PlaneModule,
+  ],
+  providers: [AgentService],
+  exports: [AgentService],
+})
+export class AgentModule {}

@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Soporte Fullmindtech</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f0f2f5;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ── Floating button ── */
+    #fm-toggle {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: #1a56db;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 4px 16px rgba(26,86,219,.45);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      transition: transform .2s, background .2s;
+      z-index: 1000;
+    }
+    #fm-toggle:hover { background: #1e429f; transform: scale(1.08); }
+
+    /* ── Chat panel ── */
+    #fm-panel {
+      position: fixed;
+      bottom: 92px;
+      right: 24px;
+      width: 360px;
+      max-width: calc(100vw - 32px);
+      height: 520px;
+      max-height: calc(100vh - 120px);
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 8px 40px rgba(0,0,0,.18);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      z-index: 999;
+      transform: scale(.92) translateY(16px);
+      opacity: 0;
+      pointer-events: none;
+      transition: transform .22s cubic-bezier(.34,1.56,.64,1), opacity .18s;
+    }
+    #fm-panel.open {
+      transform: scale(1) translateY(0);
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    /* ── Header ── */
+    #fm-header {
+      background: linear-gradient(135deg, #1a56db 0%, #1e429f 100%);
+      padding: 16px 18px;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .fm-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: rgba(255,255,255,.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+    .fm-header-info h3 { font-size: 15px; font-weight: 600; }
+    .fm-header-info p  { font-size: 12px; opacity: .8; }
+    #fm-online-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: #34d399; display: inline-block; margin-right: 5px;
+    }
+
+    /* ── Messages ── */
+    #fm-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      scroll-behavior: smooth;
+    }
+    #fm-messages::-webkit-scrollbar { width: 4px; }
+    #fm-messages::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 4px; }
+
+    .fm-msg {
+      max-width: 82%;
+      padding: 10px 14px;
+      border-radius: 16px;
+      font-size: 14px;
+      line-height: 1.45;
+      word-break: break-word;
+      white-space: pre-wrap;
+    }
+    .fm-msg.user {
+      align-self: flex-end;
+      background: #1a56db;
+      color: #fff;
+      border-bottom-right-radius: 4px;
+    }
+    .fm-msg.bot {
+      align-self: flex-start;
+      background: #f3f4f6;
+      color: #111827;
+      border-bottom-left-radius: 4px;
+    }
+    .fm-msg .fm-time {
+      display: block;
+      font-size: 10px;
+      opacity: .55;
+      margin-top: 4px;
+      text-align: right;
+    }
+
+    /* ── Typing indicator ── */
+    #fm-typing {
+      align-self: flex-start;
+      background: #f3f4f6;
+      border-radius: 16px;
+      border-bottom-left-radius: 4px;
+      padding: 12px 16px;
+      display: none;
+      gap: 5px;
+    }
+    #fm-typing.visible { display: flex; }
+    #fm-typing span {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: #9ca3af;
+      animation: bounce .9s infinite ease-in-out;
+    }
+    #fm-typing span:nth-child(2) { animation-delay: .15s; }
+    #fm-typing span:nth-child(3) { animation-delay: .3s; }
+    @keyframes bounce {
+      0%, 80%, 100% { transform: translateY(0); }
+      40% { transform: translateY(-6px); }
+    }
+
+    /* ── Input area ── */
+    #fm-form {
+      padding: 12px 14px;
+      border-top: 1px solid #e5e7eb;
+      display: flex;
+      gap: 8px;
+      align-items: flex-end;
+    }
+    #fm-input {
+      flex: 1;
+      resize: none;
+      border: 1.5px solid #d1d5db;
+      border-radius: 12px;
+      padding: 9px 12px;
+      font-size: 14px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color .2s;
+      max-height: 100px;
+      overflow-y: auto;
+      line-height: 1.45;
+    }
+    #fm-input:focus { border-color: #1a56db; }
+    #fm-input::placeholder { color: #9ca3af; }
+
+    #fm-send {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: #1a56db;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: background .2s, transform .15s;
+    }
+    #fm-send:hover:not(:disabled) { background: #1e429f; transform: scale(1.05); }
+    #fm-send:disabled { background: #93c5fd; cursor: not-allowed; }
+    #fm-send svg { width: 18px; height: 18px; fill: #fff; }
+
+    /* ── Demo page background text ── */
+    .demo-hint {
+      color: #6b7280;
+      font-size: 15px;
+      text-align: center;
+      line-height: 1.7;
+    }
+    .demo-hint strong { color: #1a56db; }
+  </style>
+</head>
+<body>
+
+  <p class="demo-hint">
+    Widget de soporte Fullmindtech<br />
+    <strong>Hacé clic en el botón azul</strong> para iniciar el chat
+  </p>
+
+  <!-- ── Toggle button ── -->
+  <button id="fm-toggle" title="Soporte">💬</button>
+
+  <!-- ── Chat panel ── -->
+  <div id="fm-panel">
+    <div id="fm-header">
+      <div class="fm-avatar">🤖</div>
+      <div class="fm-header-info">
+        <h3>Soporte Fullmindtech</h3>
+        <p><span id="fm-online-dot"></span>En línea — responde al instante</p>
+      </div>
+    </div>
+
+    <div id="fm-messages"></div>
+
+    <div id="fm-typing">
+      <span></span><span></span><span></span>
+    </div>
+
+    <form id="fm-form" autocomplete="off">
+      <textarea
+        id="fm-input"
+        placeholder="Escribí tu consulta…"
+        rows="1"
+      ></textarea>
+      <button type="submit" id="fm-send" title="Enviar">
+        <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+      </button>
+    </form>
+  </div>
+
+  <script>
+    (function () {
+      // ── Config ──────────────────────────────────────────────────────────────
+      // Si el widget se carga desde localhost:3000, la API está en el mismo origen.
+      // Funciona también si se embebe en otro dominio usando ALLOWED_ORIGINS.
+      const API_URL = window.FM_API_URL || (window.location.origin + '/chat');
+      const STORAGE_KEY = 'fm_thread_id';
+
+      // ── State ───────────────────────────────────────────────────────────────
+      let threadId = sessionStorage.getItem(STORAGE_KEY) || ('web-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7));
+      sessionStorage.setItem(STORAGE_KEY, threadId);
+      let isOpen = false;
+      let isBusy = false;
+
+      // ── Elements ────────────────────────────────────────────────────────────
+      const toggle   = document.getElementById('fm-toggle');
+      const panel    = document.getElementById('fm-panel');
+      const messages = document.getElementById('fm-messages');
+      const typing   = document.getElementById('fm-typing');
+      const form     = document.getElementById('fm-form');
+      const input    = document.getElementById('fm-input');
+      const sendBtn  = document.getElementById('fm-send');
+
+      // ── Helpers ─────────────────────────────────────────────────────────────
+      function fmt(d) {
+        return d.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+      }
+
+      function addMessage(text, role) {
+        const div = document.createElement('div');
+        div.className = 'fm-msg ' + role;
+        const time = document.createElement('span');
+        time.className = 'fm-time';
+        time.textContent = fmt(new Date());
+        div.textContent = text;
+        div.appendChild(time);
+        messages.appendChild(div);
+        messages.scrollTop = messages.scrollHeight;
+      }
+
+      function setTyping(visible) {
+        typing.classList.toggle('visible', visible);
+        messages.scrollTop = messages.scrollHeight;
+      }
+
+      function setBusy(val) {
+        isBusy = val;
+        sendBtn.disabled = val;
+        input.disabled = val;
+      }
+
+      // Auto-resize textarea
+      input.addEventListener('input', function () {
+        this.style.height = 'auto';
+        this.style.height = Math.min(this.scrollHeight, 100) + 'px';
+      });
+
+      // Enter to send (Shift+Enter = new line)
+      input.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          if (!isBusy) form.dispatchEvent(new Event('submit'));
+        }
+      });
+
+      // ── Toggle panel ────────────────────────────────────────────────────────
+      toggle.addEventListener('click', function () {
+        isOpen = !isOpen;
+        panel.classList.toggle('open', isOpen);
+        toggle.textContent = isOpen ? '✕' : '💬';
+        if (isOpen && messages.children.length === 0) {
+          sendMessage('Hola, necesito ayuda');
+        }
+        if (isOpen) setTimeout(() => input.focus(), 250);
+      });
+
+      // ── Send message ────────────────────────────────────────────────────────
+      form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        const text = input.value.trim();
+        if (!text || isBusy) return;
+
+        input.value = '';
+        input.style.height = 'auto';
+        addMessage(text, 'user');
+        await sendMessage(text);
+      });
+
+      async function sendMessage(text) {
+        setBusy(true);
+        setTyping(true);
+
+        try {
+          const resp = await fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: text, threadId }),
+          });
+
+          if (!resp.ok) throw new Error('HTTP ' + resp.status);
+          const data = await resp.json();
+          setTyping(false);
+          addMessage(data.reply, 'bot');
+        } catch (err) {
+          setTyping(false);
+          addMessage('⚠️ Lo sentimos, hubo un error al conectar. Por favor intentá de nuevo.', 'bot');
+          console.error('[FM Widget]', err);
+        } finally {
+          setBusy(false);
+          input.focus();
+        }
+      }
+
+    })();
+  </script>
+</body>
+</html>
