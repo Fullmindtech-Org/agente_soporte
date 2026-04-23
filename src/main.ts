@@ -1,12 +1,26 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, Logger } from '@nestjs/common';
+import { json } from 'express';
 import { join } from 'path';
 import type { NestExpressApplication } from '@nestjs/platform-express';
+import type { Request, Response, NextFunction } from 'express';
 import { AppModule } from './app.module';
 
 async function bootstrap(): Promise<void> {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  // Deshabilitar el bodyParser predeterminado para poder capturar el rawBody
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    bodyParser: false,
+  });
   const logger = new Logger('Bootstrap');
+
+  // Middleware que registra el cuerpo crudo en req.rawBody (necesario para verificación HMAC de Meta)
+  app.use(
+    json({
+      verify: (req: Request & { rawBody?: Buffer }, _res: Response, buf: Buffer) => {
+        req.rawBody = buf;
+      },
+    }),
+  );
 
   // Servir archivos estáticos desde /public → accesible en /widget.html, etc.
   app.useStaticAssets(join(process.cwd(), 'public'));
